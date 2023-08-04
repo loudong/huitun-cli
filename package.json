@@ -1,0 +1,24 @@
+{
+  "name": "huitun-cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loudong/huitun-cli.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/loudong/huitun-cli/issues"
+  },
+  "homepage": "https://github.com/loudong/huitun-cli#readme",
+  "dependencies": {
+    "aliyun-sdk": "^1.12.10",
+    "inquirer": "^8.2.6"
+  }
+}
