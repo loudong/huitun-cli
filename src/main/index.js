@@ -194,25 +194,25 @@ async function runPublish(moduleName, options) {
     if (branchName !== "master") {
       return LOG.error("发布线上需要在master分支执行该操作。");
     }
-  } else {
-    const { ossClient, cdnClient } = await login(bucket);
-    // 上传,dist文件夹下的文件
-    LOG.info("开始上传文件...");
-    const uploadRes = await uploadFiles(ossClient, localPath, env, moduleName);
-    if (uploadRes) {
-      // 刷新cdn
-      const refreshPath = [
-        `https://assets.diantoushi.com/diantoushi${
-          env === "development" ? "_test" : ""
-        }/`,
-        `https://assets.diantoushi.com/modules${
-          env === "development" ? "_test" : ""
-        }/${moduleName}/`,
-      ];
-      LOG.info("开始刷新cdn...");
-      await refreshCDNPaths(cdnClient, refreshPath);
-    }
   }
+  const { ossClient, cdnClient } = await login(bucket);
+  // 上传,dist文件夹下的文件
+  LOG.info("开始上传文件...");
+  const uploadRes = await uploadFiles(ossClient, localPath, env, moduleName);
+  if (uploadRes) {
+    // 刷新cdn
+    const refreshPath = [
+      `https://assets.diantoushi.com/diantoushi${
+        env === "development" ? "_test" : ""
+      }/`,
+      `https://assets.diantoushi.com/modules${
+        env === "development" ? "_test" : ""
+      }/${moduleName}/`,
+    ];
+    LOG.info("开始刷新cdn...");
+    await refreshCDNPaths(cdnClient, refreshPath);
+  }
+
   // const args = getArgs();
   // if (!args.module) {
   //   // 参数中没有指定module，则从配置文件中获取

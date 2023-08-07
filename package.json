@@ -1,6 +1,6 @@
 {
   "name": "huitun-cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "CLI to huitun for some utilities",
   "bin": {
     "huitun-cli": "./src/main/index.js"
