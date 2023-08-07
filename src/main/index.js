@@ -94,8 +94,6 @@ async function uploadFiles(client, dir, env, moduleName) {
   }
 }
 
-async function refreshCDN() {}
-
 function login(bucket) {
   return new Promise((resolve) => {
     inquirer
@@ -184,8 +182,8 @@ async function runPublish(moduleName, options) {
   console.log("options", options);
   // 没有传递env，默认是development
   const env = options.env || "development";
-  // 没有传递bucket则默认是diantoushi-test
-  const bucket = options.bucket || "diantoushi-test";
+  // 没有传递bucket则默认是diantoushi
+  const bucket = options.bucket || "diantoushi";
   if (env === "production") {
     // 获取分支
     const branchName = await getCurrentGitBranch();
@@ -195,7 +193,8 @@ async function runPublish(moduleName, options) {
   } else {
     const { ossClient, cdnClient } = await login(bucket);
     // 上传,dist文件夹下的文件
-    // uploadFiles(ossClient, localPath, env, moduleName);
+    LOG.info("开始上传文件...");
+    uploadFiles(ossClient, localPath, env, moduleName);
     // 刷新cdn
     const refreshPath = [
       `https://assets.diantoushi.com/diantoushi${
