@@ -59,6 +59,7 @@ function getCurrentGitBranch() {
 // 遍历文件列表并逐个上传
 
 async function uploadFiles(client, dir, env, moduleName) {
+  let isFinish = true;
   try {
     const files = await readDir(dir);
     // 遍历dir文件夹的文件
@@ -90,8 +91,11 @@ async function uploadFiles(client, dir, env, moduleName) {
       }
     }
   } catch (err) {
+    isFinish = false;
     LOG.error("上传失败", err.code);
   }
+  // console.log('上传结果', isFinish)
+  return isFinish;
 }
 
 function login(bucket) {
@@ -194,18 +198,20 @@ async function runPublish(moduleName, options) {
     const { ossClient, cdnClient } = await login(bucket);
     // 上传,dist文件夹下的文件
     LOG.info("开始上传文件...");
-    uploadFiles(ossClient, localPath, env, moduleName);
-    // 刷新cdn
-    const refreshPath = [
-      `https://assets.diantoushi.com/diantoushi${
-        env === "development" ? "_test" : ""
-      }/`,
-      `https://assets.diantoushi.com/modules${
-        env === "development" ? "_test" : ""
-      }/${moduleName}/`,
-    ];
-    LOG.info("开始刷新cdn...");
-    await refreshCDNPaths(cdnClient, refreshPath);
+    const uploadRes = await uploadFiles(ossClient, localPath, env, moduleName);
+    if (uploadRes) {
+      // 刷新cdn
+      const refreshPath = [
+        `https://assets.diantoushi.com/diantoushi${
+          env === "development" ? "_test" : ""
+        }/`,
+        `https://assets.diantoushi.com/modules${
+          env === "development" ? "_test" : ""
+        }/${moduleName}/`,
+      ];
+      LOG.info("开始刷新cdn...");
+      await refreshCDNPaths(cdnClient, refreshPath);
+    }
   }
   // const args = getArgs();
   // if (!args.module) {
