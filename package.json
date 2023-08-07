@@ -1,8 +1,10 @@
 {
   "name": "huitun-cli",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "CLI to huitun for some utilities",
+  "bin": {
+    "huitun-cli": "./src/main/index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,7 +20,12 @@
   },
   "homepage": "https://github.com/loudong/huitun-cli#readme",
   "dependencies": {
+    "ali-oss": "^6.18.0",
     "aliyun-sdk": "^1.12.10",
-    "inquirer": "^8.2.6"
+    "commander": "^11.0.0",
+    "dotenv": "^16.3.1",
+    "inquirer": "^8.2.6",
+    "minimist": "^1.2.8",
+    "npmlog": "^7.0.1"
   }
 }
