@@ -4,6 +4,7 @@ const { program } = require("commander");
 const fs = require("fs");
 const path = require("path");
 const OSS = require("ali-oss");
+const Core = require("@alicloud/pop-core"); // cdn
 const { exec } = require("child_process");
 const packageJson = require("../../package.json");
 const { LOG } = require("../utils/index");
@@ -117,11 +118,17 @@ function login(bucket) {
           bucket: bucket,
           region: "oss-cn-hangzhou",
         });
+        const cdnClient = new Core({
+          accessKeyId: answers.accessKeyId,
+          accessKeySecret: answers.accessKeySecret,
+          endpoint: "http://cdn.aliyuncs.com",
+          apiVersion: "2018-05-10",
+        });
         // console.log("登入", ossClient);
         /**
          * todo 判断登入状态
          */
-        resolve(ossClient);
+        resolve({ ossClient, cdnClient });
       });
   });
 }
@@ -147,6 +154,29 @@ function setEnv(env) {
   console.log("env", process.env);
 }
 
+// 刷新cdn
+async function refreshCDNPaths(cdnClient, pathsToRefresh) {
+  const requestOption = {
+    method: "POST",
+  };
+
+  const params = {
+    Action: "RefreshObjectCaches",
+    ObjectType: "Directory",
+    ObjectPath: pathsToRefresh.join("\n"), // 使用换行符将多个目录拼接起来
+  };
+  try {
+    const result = await cdnClient.request(
+      "RefreshObjectCaches",
+      params,
+      requestOption
+    );
+    LOG.success("刷新请求已提交", result.RequestId);
+  } catch (error) {
+    LOG.error("刷新请求提交失败", error);
+  }
+}
+
 async function runPublish(moduleName, options) {
   if (!MODULE_LIST.includes(moduleName)) {
     return LOG.error("该模块暂不支持");
@@ -163,9 +193,20 @@ async function runPublish(moduleName, options) {
       return LOG.error("发布线上需要在master分支执行该操作。");
     }
   } else {
-    const ossClient = await login(bucket);
+    const { ossClient, cdnClient } = await login(bucket);
     // 上传,dist文件夹下的文件
-    uploadFiles(ossClient, localPath, env, moduleName);
+    // uploadFiles(ossClient, localPath, env, moduleName);
+    // 刷新cdn
+    const refreshPath = [
+      `https://assets.diantoushi.com/diantoushi${
+        env === "development" ? "_test" : ""
+      }/`,
+      `https://assets.diantoushi.com/modules${
+        env === "development" ? "_test" : ""
+      }/${moduleName}/`,
+    ];
+    LOG.info("开始刷新cdn...");
+    await refreshCDNPaths(cdnClient, refreshPath);
   }
   // const args = getArgs();
   // if (!args.module) {

@@ -1,6 +1,6 @@
 {
   "name": "huitun-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI to huitun for some utilities",
   "bin": {
     "huitun-cli": "./src/main/index.js"
@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/loudong/huitun-cli#readme",
   "dependencies": {
+    "@alicloud/pop-core": "^1.7.13",
     "ali-oss": "^6.18.0",
     "aliyun-sdk": "^1.12.10",
     "commander": "^11.0.0",
