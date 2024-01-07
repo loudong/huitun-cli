@@ -11,7 +11,8 @@ const { LOG } = require("../utils/index");
 // const minimist = require("minimist");
 // const dotenv = require("dotenv");
 const { MODULE_LIST } = require("../constant");
-const localPath = "./dist";
+const LOCAL_PATH = "./dist";
+const DEFAULT_BUCKET = "diantoushi";
 // const CDN = require('aliyun-sdk').CDN;
 
 // 读取目录内容
@@ -62,6 +63,11 @@ async function uploadFiles(client, dir, env, moduleName) {
   let isFinish = true;
   try {
     const files = await readDir(dir);
+    console.log("files", files);
+    if (files.length === 0) {
+      LOG.error("上传内容不能为空");
+      return false;
+    }
     // 遍历dir文件夹的文件
     for (const file of files) {
       const filePath = path.join(dir, file);
@@ -74,7 +80,7 @@ async function uploadFiles(client, dir, env, moduleName) {
         // 主入口文件上传路径
         const mainPath =
           env === "development" ? "diantoushi_test" : "diantoushi";
-        const relativePath = path.relative(localPath, filePath);
+        const relativePath = path.relative(LOCAL_PATH, filePath);
         // 上传资源 --> modules
         await client.put(
           `${assetsPath}/${moduleName}/${relativePath}`,
@@ -92,7 +98,7 @@ async function uploadFiles(client, dir, env, moduleName) {
     }
   } catch (err) {
     isFinish = false;
-    LOG.error("上传失败", err.code);
+    LOG.error("上传失败", err.message);
   }
   // console.log('上传结果', isFinish)
   return isFinish;
@@ -187,7 +193,7 @@ async function runPublish(moduleName, options) {
   // 没有传递env，默认是development
   const env = options.env || "development";
   // 没有传递bucket则默认是diantoushi
-  const bucket = options.bucket || "diantoushi";
+  const bucket = options.bucket || DEFAULT_BUCKET;
   if (env === "production") {
     // 获取分支
     const branchName = await getCurrentGitBranch();
@@ -198,7 +204,7 @@ async function runPublish(moduleName, options) {
   const { ossClient, cdnClient } = await login(bucket);
   // 上传,dist文件夹下的文件
   LOG.info("开始上传文件...");
-  const uploadRes = await uploadFiles(ossClient, localPath, env, moduleName);
+  const uploadRes = await uploadFiles(ossClient, LOCAL_PATH, env, moduleName);
   if (uploadRes) {
     // 刷新cdn
     const refreshPath = [
