@@ -9,6 +9,7 @@ const MODULE_LIST = [
   "tb_list",
   "tb_shop",
   "tb_trade",
+  "douyin_detail",
 ];
 
 module.exports = {
