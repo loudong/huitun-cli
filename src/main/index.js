@@ -59,7 +59,7 @@ function getCurrentGitBranch() {
 
 // 遍历文件列表并逐个上传
 
-async function uploadFiles(client, dir, env, moduleName) {
+async function uploadFiles(client, dir, env, moduleName, isChangeMain) {
   let isFinish = true;
   try {
     const files = await readDir(dir);
@@ -73,7 +73,7 @@ async function uploadFiles(client, dir, env, moduleName) {
       const filePath = path.join(dir, file);
       const stats = await getFileStats(filePath);
       if (stats.isDirectory()) {
-        await uploadFiles(client, filePath, env, moduleName); // 递归处理子文件夹
+        await uploadFiles(client, filePath, env, moduleName, isChangeMain); // 递归处理子文件夹
       } else {
         // 资源文件上传路径
         const assetsPath = env === "development" ? "modules_test" : "modules";
@@ -89,7 +89,7 @@ async function uploadFiles(client, dir, env, moduleName) {
         LOG.success(
           `文件 ${filePath} 上传至${assetsPath}/${moduleName}/${relativePath}`
         );
-        if (file === `${moduleName}.js`) {
+        if (isChangeMain && file === `main.js`) {
           // 上传入口文件 ---> diantoushi
           await client.put(`${mainPath}/${relativePath}`, filePath);
           LOG.success(`文件 ${filePath} 上传至${mainPath}/${relativePath}`);
@@ -192,8 +192,8 @@ async function runPublish(moduleName, options) {
   console.log("options", options);
   // 没有传递env，默认是development
   const env = options.env || "development";
-  // 没有传递bucket则默认是diantoushi
-  const bucket = options.bucket || DEFAULT_BUCKET;
+  // 默认是diantoushi
+  const bucket = DEFAULT_BUCKET;
   if (env === "production") {
     // 获取分支
     const branchName = await getCurrentGitBranch();
@@ -204,7 +204,7 @@ async function runPublish(moduleName, options) {
   const { ossClient, cdnClient } = await login(bucket);
   // 上传,dist文件夹下的文件
   LOG.info("开始上传文件...");
-  const uploadRes = await uploadFiles(ossClient, LOCAL_PATH, env, moduleName);
+  const uploadRes = await uploadFiles(ossClient, LOCAL_PATH, env, moduleName, options.isChangeMain);
   if (uploadRes) {
     // 刷新cdn
     const refreshPath = [
@@ -238,7 +238,7 @@ program
   .description("上传打包文件到oss，并更新缓存。")
   .argument("<module>", "指定要发布的模块")
   .option("--env <envName>", "指定要发布的环境")
-  .option("--bucket <butketName>", "指定要发布的bucket")
+  .option("--isChangeMain <isChangeMain>", "是否改动main")
   .action((str, options) => {
     runPublish(str, options);
   });
